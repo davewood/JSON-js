@@ -233,30 +233,28 @@ var json_parse = (function () {
         tt = function () {
             var tt_str = '';
 
-            function tt_expect(re) {
+            function tt_expect(re, die) {
                 if (ch.match(re)) {
                     tt_str += ch;
                     next();
+                    return true;
                 }
                 else {
-                    error("Bad tt");
+                    if (die) {
+                        error("Bad tt");
+                    }
                 }
+                return false;
             }
 
-            tt_expect('\\[');
-            tt_expect('%');
-            tt_expect('[a-zA-Z0-9_]');
-            while(1) {
-                if (ch.match(/[a-zA-Z0-9_]/)) {
-                    tt_str += ch;
-                    next();
-                }
-                else {
-                    break;
-                }
-            }
-            tt_expect('%');
-            tt_expect(']');
+            tt_expect('\\[', true);
+            tt_expect('%', true);
+            while( tt_expect('\ ', false) ) {}
+            tt_expect('[a-zA-Z0-9_]', true);
+            while( tt_expect('[a-zA-Z0-9_]', false) ) {}
+            while( tt_expect('\ ', false) ) {}
+            tt_expect('%', true);
+            tt_expect(']', true);
             return tt_str;
         },
 
