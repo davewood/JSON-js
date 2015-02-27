@@ -228,6 +228,38 @@ var json_parse = (function () {
 
         value,  // Place holder for the value function.
 
+// Parse a Template::Toolkit object
+
+        tt = function () {
+
+            var tt_str = '';
+
+            if (ch === '<') {
+                tt_str = '<';
+                next('<');
+                if (ch.match(/[a-zA-Z0-9_]/)) {
+                    tt_str = tt_str + ch;
+                }
+                else {
+                    error("Bad tt");
+                }
+                while(next()) {
+                    if (ch === '>') {
+                        tt_str = tt_str + '>';
+                        next();
+                        return tt_str;
+                    }
+                    else if (ch.match(/[a-zA-Z0-9_]/)) {
+                        tt_str = tt_str + ch;
+                    }
+                    else {
+                        error("Bad tt");
+                    }
+                }
+            }
+            error("Bad tt");
+        },
+
         array = function () {
 
 // Parse an array value.
@@ -291,14 +323,18 @@ var json_parse = (function () {
 
     value = function () {
 
-// Parse a JSON value. It could be an object, an array, a string, a number,
+// Parse a JSON value. It could be an object, a Template::Toolkit object, an array, a string, a number,
 // or a word.
 
         white();
         switch (ch) {
         case '{':
             return object();
+        case '<':
+            return tt();
         case '[':
+            return array();
+        case '<':
             return array();
         case '"':
             return string();
