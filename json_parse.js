@@ -231,33 +231,33 @@ var json_parse = (function () {
 // Parse a Template::Toolkit object
 
         tt = function () {
-
             var tt_str = '';
 
-            if (ch === '<') {
-                tt_str = '<';
-                next('<');
-                if (ch.match(/[a-zA-Z0-9_]/)) {
-                    tt_str = tt_str + ch;
+            function tt_expect(re) {
+                if (ch.match(re)) {
+                    tt_str += ch;
+                    next();
                 }
                 else {
                     error("Bad tt");
                 }
-                while(next()) {
-                    if (ch === '>') {
-                        tt_str = tt_str + '>';
-                        next();
-                        return tt_str;
-                    }
-                    else if (ch.match(/[a-zA-Z0-9_]/)) {
-                        tt_str = tt_str + ch;
-                    }
-                    else {
-                        error("Bad tt");
-                    }
+            }
+
+            tt_expect('\\[');
+            tt_expect('%');
+            tt_expect('[a-zA-Z0-9_]');
+            while(1) {
+                if (ch.match(/[a-zA-Z0-9_]/)) {
+                    tt_str += ch;
+                    next();
+                }
+                else {
+                    break;
                 }
             }
-            error("Bad tt");
+            tt_expect('%');
+            tt_expect(']');
+            return tt_str;
         },
 
         array = function () {
@@ -333,7 +333,13 @@ var json_parse = (function () {
         case '<':
             return tt();
         case '[':
-            return array();
+            var lookahead = text.charAt(at);
+            switch (lookahead) {
+            case '%':
+                return tt();
+            default:
+                return array();
+            }
         case '<':
             return array();
         case '"':
